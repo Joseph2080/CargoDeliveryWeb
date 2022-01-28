@@ -1,24 +1,20 @@
 package com.example.cargodeliveryweb.Controller.Cargo;
-
-
-
 import com.example.cargodeliveryweb.Model.Cargo.Cargo;
 import com.example.cargodeliveryweb.Model.Cargo.CargoService;
-
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 //This class is the controller which has similar tasks as the servlet.
-@WebServlet("/cargo")
+@WebServlet({"/","/cargo"})
 public class CargoController extends HttpServlet {
     CargoService service;
     public void init(){
@@ -26,6 +22,7 @@ public class CargoController extends HttpServlet {
     }
 
 
+    //Search
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         listCargo(request, response);
     }
@@ -33,55 +30,78 @@ public class CargoController extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws  IOException, ServletException {
-        String action = request.getServletPath();
 
-            switch (action) {
-                case "cargo/new":
-                    registerCargo(request, response);
-                    break;
-                default:
-                    listCargo(request, response);
-                    break;
+        if(request!=null||response!=null) {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                String role = session.getAttribute("role").toString();
+                listCargo(request, response);
+            } else {
+                response.sendRedirect("login_screen.jsp");
             }
+        }else{
+            response.sendRedirect("login_screen.jsp");
+        }
+
     }
 
     private void listCargo( HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
-        List<Cargo> listCargo = service.getCargoList();
-        request.setAttribute("listCargo", listCargo);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("cargo_list.jsp");
-        dispatcher.forward(request, response);
-    }
 
-    private void registerCargo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
-
-        String cargoType = request.getParameter("cargo_type");
-        double weight = Double.parseDouble(request.getParameter("weight"));
-        double volume = Double.parseDouble(request.getParameter("volume"));
-        String startDateStr = request.getParameter("delivery_date");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        //surround below line with try catch block as below code throws checked exception
-        Date date = null;
-        try {
-            date = sdf.parse(startDateStr);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        String street = request.getParameter("street");
-        String town = request.getParameter("town");
-        String country = request.getParameter("country");
-        String postCode = request.getParameter("postal_code");
-        Cargo cargo = new Cargo(cargoType,weight,volume,date,street,town,country,postCode);
-
-        try {
-            int result = service.registerCargo(cargo);
-            System.out.println(result);
-            response.sendRedirect("cargo_list.jsp");
-            if(result == 0){
-                //Update with response to notify that cargo was not registered
+        HttpSession session = request.getSession();
+        if(session!=null) {
+            String email = session.getAttribute("userEmail").toString();
+            String role = session.getAttribute("role").toString();
+            String search = request.getParameter("searchCargo");
+            String sort = request.getParameter("filter");
+            List<Cargo> listCargo = service.getCargoList(email,false);
+            if (sort != null && listCargo != null) {
+                if (!listCargo.isEmpty()) {
+                    if (sort.contains("Sort By Cargo ID")) {
+                        Collections.sort(listCargo, Cargo.compareById);
+                    } else if (sort.contains("Sort By Type")) {
+                        Collections.sort(listCargo, Cargo.compareByType);
+                    } else if (sort.contains("Sort By Country")) {
+                        Collections.sort(listCargo, Cargo.compareByCountry);
+                    }
+                }
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+
+            request.setAttribute("listCargo", listCargo);
+            if (search != null) {
+                if (!search.isEmpty()) {
+                    Collections.sort(listCargo, Cargo.compareById);
+                    request.setAttribute("listCargo", search(listCargo, search));
+                } else {
+                    request.setAttribute("listCargo", listCargo);
+                }
+            }
+            RequestDispatcher dispatcher = request.getRequestDispatcher("cargo_list.jsp");
+
+            if(role.equals("manager")){
+                dispatcher = request.getRequestDispatcher("/admin");
+            }
+            dispatcher.forward(request, response);
         }
     }
+
+    private List<Cargo> search(List<Cargo> list,String value){
+
+        List<Cargo> temp = new ArrayList<>();
+        for(Cargo cargo:list){
+            try{
+                int id = Integer.parseInt(value);
+                if(cargo.getCargoId()==id){
+                    temp.add(cargo);
+                }
+            }catch(NumberFormatException nE){
+                if(cargo.getCargoType().contains(value)||cargo.getAddress().contains(value)){
+                    temp.add(cargo);
+                }
+            }
+        }
+        return temp;
+    }
+
+
 
 }

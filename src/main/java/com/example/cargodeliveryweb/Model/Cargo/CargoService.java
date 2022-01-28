@@ -10,9 +10,9 @@ import java.util.List;
 public class CargoService {
 
     private static final String SELECT_UPCOMING_CARGOS = "select * from cargodb.tblcargo where deliveryDate > getdate(); ";
-    private static final String SELECT_ALL_CARGOS = "select * from cargodb.tblcargo";
+
     public int registerCargo(Cargo cargo) throws ClassNotFoundException {
-            String insert_cargo = "INSERT INTO tblcargo(CargoType, weight, volume, deliveryDate,street,town, country, postalCode) VALUES(?,?,?,?,?,?,?,?);";
+            String insert_cargo = "INSERT INTO tblcargo(CargoType, weight, volume, deliveryDate,street,town, country, postalCode,userId,delivered,approved) VALUES(?,?,?,?,?,?,?,?,?,?,?);";
             int result = 0;
         Class.forName("com.mysql.cj.jdbc.Driver");
 
@@ -28,6 +28,10 @@ public class CargoService {
                 preparedStatement.setString(6,cargo.getAddressArr()[1]);
                 preparedStatement.setString(7,cargo.getAddressArr()[2]);
                 preparedStatement.setString(8,cargo.getAddressArr()[3]);
+                preparedStatement.setInt(9,cargo.getUserId());
+                preparedStatement.setBoolean(10,false);
+                preparedStatement.setBoolean(11,false);
+
                 result = preparedStatement.executeUpdate();
                 System.out.println(cargo);
 
@@ -52,7 +56,14 @@ public class CargoService {
             return connection;
         }
 
-        public List<Cargo> getCargoList(){
+        public List<Cargo> getCargoList(String email,boolean admin){
+        String SELECT_ALL_CARGOS = "select cargoId,cargoType,weight,volume,deliveryDate,street,town,country,postalCode,delivered,approved\n" +
+                "from tblcargo INNER JOIN tbluser t on tblcargo.userId = t.userId\n" +
+                "where email = '" + email + "'and approved = 1;";
+        if(admin){
+            SELECT_ALL_CARGOS  = "select*\n" +
+                    "from tblcargo where approved = false;";
+        }
         List<Cargo> cargoList = new ArrayList<>();
         // Step 1: Establishing a Connection
             try (Connection connection = getConnection();
@@ -74,7 +85,11 @@ public class CargoService {
                     String town = rs.getString("town");
                     String country = rs.getString("country");
                     String postalCode = rs.getString("postalCode");
-                    cargoList.add(new Cargo(id,  cargoType,weight, volume,  date, street,town, country,postalCode));
+                    boolean delivered = rs.getBoolean("delivered");
+                    boolean confirmed = rs.getBoolean("approved");
+                    System.out.println(cargoType);
+                    cargoList.add(new Cargo(id, cargoType, weight, volume, date, street, town, country, postalCode, delivered,confirmed));
+
                 }
             } catch (SQLException e) {
                 printSQLException(e);
@@ -82,6 +97,52 @@ public class CargoService {
             return cargoList;
         }
 
+        public int cargoDelivered(int cargoId){
+            String updateCargo = "update tblcargo " +
+                    "set delivered = 1\n" +
+                    "where cargoId = " + cargoId + "; ";
+            try(Connection connection = getConnection();
+
+            // Step 2:Create a statement using connection object
+            PreparedStatement preparedStatement = connection.prepareStatement(updateCargo);){
+                return preparedStatement.executeUpdate();
+
+            } catch (SQLException e) {
+                printSQLException(e);
+                return 0;
+            }
+        }
+
+    public int cargoApproved(int cargoId){
+        String updateCargo = "update tblcargo " +
+                "set approved = 1\n" +
+                "where cargoId = " + cargoId + "; ";
+        try(Connection connection = getConnection();
+
+            // Step 2:Create a statement using connection object
+            PreparedStatement preparedStatement = connection.prepareStatement(updateCargo);){
+            return preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            printSQLException(e);
+            return 0;
+        }
+    }
+
+        public int approveCargo(int cargoId){
+            String approveCargo = "update tblcargo set confirmed = 1\n" +
+                    "where cargoId = " + cargoId + ";";
+            try(Connection connection = getConnection();
+
+                // Step 2:Create a statement using connection object
+                PreparedStatement preparedStatement = connection.prepareStatement(approveCargo);){
+                return preparedStatement.executeUpdate();
+
+            } catch (SQLException e) {
+                printSQLException(e);
+                return 0;
+            }
+        }
 
     private void printSQLException(SQLException ex) {
         for (Throwable e: ex) {

@@ -9,6 +9,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
@@ -21,8 +22,8 @@ public class LoginServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        RequestDispatcher dispatcher = request.getRequestDispatcher("login_screen.jsp");
-        dispatcher.forward(request,response);
+            RequestDispatcher dispatcher = request.getRequestDispatcher("login_screen.jsp");
+            dispatcher.forward(request,response);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -32,15 +33,27 @@ public class LoginServlet extends HttpServlet {
     private void login(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
         String email = request.getParameter("email");
         String password = request.getParameter("password");
+        HttpSession session = request.getSession();
 
         if(userService.verifyUser(email,password)){
-                RequestDispatcher dispatcher = request.getRequestDispatcher("/cargo");
+                String role = userService.getRole();
+                int id = userService.getId();
+                session.setAttribute("userEmail",email);
+                session.setAttribute("role",role);
+                session.setAttribute("id",id);
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/cargo");;
+
+                if(role.equals("manager")){
+                    dispatcher = request.getRequestDispatcher("/admin");
+                }
                 dispatcher.forward(request, response);
         }else{
             RequestDispatcher dispatcher = request.getRequestDispatcher("authentication_failed.jsp");
             dispatcher.forward(request,response);
         }
     }
+
 
 
 }

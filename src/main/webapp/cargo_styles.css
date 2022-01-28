@@ -32,10 +32,11 @@
 }
 
 .form__input {
+
     -webkit-appearance: none;
 
     width: 100%;
-    max-width: 425px;
+    max-width: 255px;
 
     /* Fix for Safari/iOS date fields */
     min-height: calc(0.3em + (0.3em * 1) + 0.2em);
@@ -115,4 +116,64 @@ textarea.form__input {
 
 .form__btn:active {
     background: #0fa942;
+}
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    overflow: auto;
+    padding: 0 40px;
+}
+
+.card {
+    background-color: #fff;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    margin: 10px;
+}
+
+.square_btn{
+    display: inline-block;
+    position: relative;
+    padding: 0.1em 1em;
+    background: #333;/*Button Color*/
+    color: #FFF;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+.square_btn:before{
+    content: "";
+    position: absolute;
+    top: 16px;
+    left: 0;
+    width: -webkit-calc(60% - 10px);
+    width: calc(100% - 16px);
+    height: 0;
+    border: solid 8px transparent;
+    border-bottom-color: #333;/*brighter than button color*/
+}
+
+.fixed-header
+{
+    width: 100%;
+    position: fixed;
+    background: #333;
+    padding: 20px 0;
+    color: #fff;
+}
+
+.nava{
+    color: #fff;
+    padding: 7px 25px;
+    display: inline-block;
+    font-weight: 700;
+
+}
+
+.h3{
+    font-weight: 700;
+    text-align:center;
+
 }

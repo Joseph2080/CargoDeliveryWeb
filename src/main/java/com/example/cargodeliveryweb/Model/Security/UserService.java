@@ -8,6 +8,7 @@ import java.util.List;
 
 public class UserService {
 
+    private User user;
     protected Connection getConnection(){
         Connection connection = null;
         try {
@@ -51,7 +52,7 @@ public class UserService {
             System.out.println(preparedStatement);
             // Step 3: Execute the query or update query
             ResultSet rs = preparedStatement.executeQuery();
-
+                
             int count = 0;
             // Step 4: Process the ResultSet object.
             while (rs.next()) {
@@ -59,6 +60,7 @@ public class UserService {
                 String email = rs.getString("email");
                 String role = rs.getString("role");
                 String password = rs.getString("password");
+                user = new User(id,email,role,password);
                 if(email.equals(e)&&password.equals(MD5.encrypt(p))){
                     return true;
                 }
@@ -69,6 +71,13 @@ public class UserService {
             printSQLException(sqlException);
             return false;
         }
+    }
+    
+    public String getRole(){
+        return user.getRole();
+    }
+    public int getId(){
+        return user.getUserId();
     }
 
     private void printSQLException(SQLException ex) {
