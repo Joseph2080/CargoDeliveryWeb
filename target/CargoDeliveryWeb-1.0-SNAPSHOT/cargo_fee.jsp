@@ -20,7 +20,7 @@
         <h1 class = "form__title" >Estimated Cost Of Delivery</h1>
         <h3 class = "form_paragraph" >The estimated expense to move your cargo is valued at</h3>
         <br>
-        <input name = "invoice" id = "invoice"  value="{cost}" class = "form__title"></input>
+        <input name = "invoice" id = "invoice"  value="3500" class = "form__title"></input>
         <div class="form __item">
             <a  href ="<%=request.getContextPath()%>/cargo" methods="get"  >Back</a>
         </div>
