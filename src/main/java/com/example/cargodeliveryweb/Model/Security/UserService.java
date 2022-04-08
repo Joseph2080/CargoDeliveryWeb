@@ -13,7 +13,7 @@ public class UserService {
         Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/cargodb?useSSL=false","root","Sandile12");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/cargodb?useSSL=false","root","********");
         } catch (SQLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
